@@ -1,0 +1,82 @@
+
+library(readxl)
+library(tidyr)
+
+week13hw <- list()
+week13hw$dat$raw <- read_excel("~/Downloads/Data_Extract_From_World_Development_Indicators-6.xlsx")
+week13hw$dat$raw|>View()
+week13hw$dat$raw |>names()
+week13hw$dat$y2008 <- select(week13hw$dat$raw , c(-"2018 [YR2018]", -"Country Code", -"Series Code"))
+week13hw$dat$y2008  <- spread(week13hw$dat$y2008 , key = "Series Name", value = "2008 [YR2008]")
+
+week13hw$dat$y2008  <-select(week13hw$dat$y2008 , -"CO2 emissions (kt)")
+#dat2008|>View()
+
+week13hw$dat$y2018 <- select(week13hw$dat$raw, c(-"2008 [YR2008]", -"Country Code", -"Series Code"))
+week13hw$dat$y2018  = spread(week13hw$dat$y2018 , key = "Series Name", value = "2018 [YR2018]")
+week13hw$dat$y2018|>names()
+week13hw$dat$y2018  <-select(week13hw$dat$y2018 , -"CO2 emissions (kt)")
+#dweek13hw$dat$y2018|>View()
+week13hw$dat$y2018$year<- '2018'
+week13hw$dat$y2018|>View()
+
+names(week13hw$dat$y2018) <- c("country", 'co2year18', 'gdpyear18' )
+names(week13hw$dat$y2008) <- c("country", 'co2year08', 'gdpyear08' )
+
+week13hw$dat$final<-
+  {
+    week13hw$dat$y2008|>#names()
+      left_join(week13hw$dat$y2018, by="country")
+  }
+week13hw$dat$final
+
+
+
+library(ggrepel)
+th_just = 1#input$th_just
+th_vust = 1#input$th_vust
+
+ggplot(data = week13hw$dat$final)+
+  geom_point(
+    aes(
+      x = week13hw$dat$final$gdpyear08,
+      y = week13hw$dat$final$co2year08
+    ),
+    alpha = 0.3,
+    colour = 'Blue',
+    size = week13hw$dat$final$co2year08/2
+  )+
+  geom_point(
+    aes(
+      x = week13hw$dat$final$gdpyear18,
+      y = week13hw$dat$final$co2year18
+    ),
+    alpha = 0.8,
+    colour = 'Blue',
+    size = week13hw$dat$final$co2year08/2
+    #size
+  )+
+  geom_segment(
+    aes(
+      x = week13hw$dat$final$gdpyear08,
+      y = week13hw$dat$final$co2year08,
+      xend = week13hw$dat$final$gdpyear18, 
+      yend = week13hw$dat$final$co2year18
+    ), arrow = arrow(length = unit(0.2,"cm")), size = 0.5 
+  )+
+  geom_text_repel(
+    aes(
+      x =  week13hw$dat$final$gdpyear08,# + th_just,
+      y =  week13hw$dat$final$co2year08,# + th_vust,
+      label = week13hw$dat$final$country
+    ),
+    size = 2.5 #input$size
+  )+
+  scale_x_continuous(labels = scales::comma)+
+  theme_minimal()+
+  labs( title = 'Top 15 CO2 Emitters and Their GDP Growth Between 2008 and 2018 ',
+        subtitle = 'Selected countries, GDP growth and CO2 emissions reductions',
+        caption = 'source: World Bank', x = 'GDP per person ($)', y = 'CO2 emissions per person  (metric tons)')
+
+
+
